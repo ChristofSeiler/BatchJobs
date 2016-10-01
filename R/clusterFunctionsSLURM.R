@@ -34,10 +34,13 @@ makeClusterFunctionsSLURM = function(template.file, list.jobs.cmd = c("squeue", 
     output = collapse(res$output, sep = "\n")
     if (grepl(max.jobs.msg, output, fixed = TRUE)) {
       makeSubmitJobResult(status = 1L, batch.job.id = NA_character_, msg = max.jobs.msg)
-    } else if (grepl(temp.error, output, fixed = TRUE)) {
-      # another temp error we want to catch
-      makeSubmitJobResult(status = 2L, batch.job.id = NA_character_, msg = temp.error)
-    } else if (res$exit.code > 0L) {
+    } 
+    # workaround: commenting it out otherwise keeps happening on Stanford cluster
+    #else if (grepl(temp.error, output, fixed = TRUE)) {
+    #  # another temp error we want to catch
+    #  makeSubmitJobResult(status = 2L, batch.job.id = NA_character_, msg = temp.error)
+    #} 
+    else if (res$exit.code > 0L) {
       cfHandleUnknownSubmitError("sbatch", res$exit.code, res$output)
     } else {
       makeSubmitJobResult(status = 0L, batch.job.id = stri_trim_both(stri_split_fixed(output, " ")[[1L]][4L]))
