@@ -34,13 +34,10 @@ makeClusterFunctionsSLURM = function(template.file, list.jobs.cmd = c("squeue", 
     output = collapse(res$output, sep = "\n")
     if (grepl(max.jobs.msg, output, fixed = TRUE)) {
       makeSubmitJobResult(status = 1L, batch.job.id = NA_character_, msg = max.jobs.msg)
-    } 
-    # workaround: commenting it out otherwise keeps happening on Stanford cluster
-    #else if (grepl(temp.error, output, fixed = TRUE)) {
-    #  # another temp error we want to catch
-    #  makeSubmitJobResult(status = 2L, batch.job.id = NA_character_, msg = temp.error)
-    #} 
-    else if (res$exit.code > 0L) {
+    } else if (grepl(temp.error, output, fixed = TRUE)) {
+      # another temp error we want to catch
+      makeSubmitJobResult(status = 2L, batch.job.id = NA_character_, msg = temp.error)
+    } else if (res$exit.code > 0L) {
       cfHandleUnknownSubmitError("sbatch", res$exit.code, res$output)
     } else {
       makeSubmitJobResult(status = 0L, batch.job.id = stri_trim_both(stri_split_fixed(output, " ")[[1L]][4L]))
@@ -53,7 +50,7 @@ makeClusterFunctionsSLURM = function(template.file, list.jobs.cmd = c("squeue", 
 
   listJobs = function(conf, reg) {
     # Result is lines of fully quantified batch.job.ids
-    jids = runOSCommandLinux(list.jobs.cmd[1L], list.jobs.cmd[-1L])$output
+    jids = runOSCommandLinux(cmd = list.jobs.cmd[1L], args = list.jobs.cmd[-1L],stop.on.exit.code = FALSE)$output
     stri_extract_first_regex(jids, "[0-9]+")
   }
 
